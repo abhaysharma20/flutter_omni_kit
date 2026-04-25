@@ -2,6 +2,15 @@ import 'dart:io';
 import 'dart:isolate';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:rxdart/rxdart.dart';
+
+class PositionData {
+  final Duration position;
+  final Duration bufferedPosition;
+  final Duration duration;
+
+  PositionData(this.position, this.bufferedPosition, this.duration);
+}
 
 class OmniAudioPlayer extends StatefulWidget {
   final String url;
@@ -16,8 +25,6 @@ class OmniAudioPlayer extends StatefulWidget {
   final EdgeInsetsGeometry padding;
   final BorderRadiusGeometry? borderRadius;
   
-  /// Whether to use a background Isolate to validate the media (e.g., DNS lookup or file check)
-  /// before initializing the player. This prevents main-thread jank for slow connections.
   final bool useBackgroundValidation;
 
   const OmniAudioPlayer({
@@ -40,38 +47,22 @@ class OmniAudioPlayer extends StatefulWidget {
 
 class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
   late AudioPlayer _audioPlayer;
-  Duration _duration = Duration.zero;
-  Duration _position = Duration.zero;
-  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _audioPlayer = AudioPlayer();
-    
-    // Listen for duration updates
-    _audioPlayer.durationStream.listen((d) {
-      if (mounted && d != null) {
-        setState(() => _duration = d);
-      }
-    });
-
-    // Listen for position updates
-    _audioPlayer.positionStream.listen((p) {
-      if (mounted) {
-        setState(() => _position = p);
-      }
-    });
-
-    // Listen for buffering/loading state
-    _audioPlayer.processingStateStream.listen((state) {
-      if (mounted) {
-        setState(() => _isLoading = state == ProcessingState.buffering || state == ProcessingState.loading);
-      }
-    });
-
     _initAudio();
   }
+
+  /// Combine position, buffered position, and duration into a single stream
+  Stream<PositionData> get _positionDataStream =>
+      Rx.combineLatest3<Duration, Duration, Duration?, PositionData>(
+          _audioPlayer.positionStream,
+          _audioPlayer.bufferedPositionStream,
+          _audioPlayer.durationStream,
+          (position, bufferedPosition, duration) =>
+              PositionData(position, bufferedPosition, duration ?? Duration.zero));
 
   static Future<bool> _validateMediaInBackground(Map<String, dynamic> args) async {
     final url = args['url'] as String?;
@@ -100,27 +91,16 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
 
   Future<void> _initAudio() async {
     if (widget.useBackgroundValidation) {
-      final isValid = await _runBackgroundValidation(widget.url);
-      if (!isValid) {
-        debugPrint("OmniAudioPlayer: Validation failed for ${widget.url}");
-      }
+      await _runBackgroundValidation(widget.url);
     }
 
     try {
-      final duration = await _audioPlayer.setUrl(widget.url);
-      if (mounted && duration != null) {
-        setState(() {
-          _duration = duration;
-          _isLoading = false;
-        });
-      }
-      
+      await _audioPlayer.setUrl(widget.url);
       if (widget.autoPlay) {
         _audioPlayer.play();
       }
     } catch (e) {
       debugPrint("OmniAudioPlayer Error: $e");
-      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -151,75 +131,94 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
       ),
       child: Row(
         children: [
-          StreamBuilder<bool>(
-            stream: _audioPlayer.playingStream,
+          StreamBuilder<PlayerState>(
+            stream: _audioPlayer.playerStateStream,
             builder: (context, snapshot) {
-              final isPlaying = snapshot.data ?? false;
-              if (_isLoading) {
-                return SizedBox(
-                  width: widget.iconSize,
-                  height: widget.iconSize,
-                  child: const Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
+              final playerState = snapshot.data;
+              final processingState = playerState?.processingState;
+              final playing = playerState?.playing ?? false;
+
+              if (processingState == ProcessingState.loading ||
+                  processingState == ProcessingState.buffering) {
+                return Container(
+                  margin: const EdgeInsets.all(8.0),
+                  width: widget.iconSize - 16,
+                  height: widget.iconSize - 16,
+                  child: const CircularProgressIndicator(strokeWidth: 2),
+                );
+              } else if (playing != true) {
+                return IconButton(
+                  icon: const Icon(Icons.play_circle_filled),
+                  iconSize: widget.iconSize,
+                  color: activeColor,
+                  onPressed: _audioPlayer.play,
+                );
+              } else if (processingState != ProcessingState.completed) {
+                return IconButton(
+                  icon: const Icon(Icons.pause_circle_filled),
+                  iconSize: widget.iconSize,
+                  color: activeColor,
+                  onPressed: _audioPlayer.pause,
+                );
+              } else {
+                return IconButton(
+                  icon: const Icon(Icons.replay_circle_filled),
+                  iconSize: widget.iconSize,
+                  color: activeColor,
+                  onPressed: () => _audioPlayer.seek(Duration.zero),
                 );
               }
-              return IconButton(
-                icon: Icon(isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled),
-                iconSize: widget.iconSize,
-                color: activeColor,
-                onPressed: () {
-                  if (isPlaying) {
-                    _audioPlayer.pause();
-                  } else {
-                    _audioPlayer.play();
-                  }
-                },
-              );
             },
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SliderTheme(
-                  data: SliderTheme.of(context).copyWith(
-                    trackHeight: 4.0,
-                    activeTrackColor: activeColor,
-                    inactiveTrackColor: inactiveColor,
-                    thumbColor: activeColor,
-                    thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6.0),
-                    overlayColor: activeColor.withAlpha(51),
-                  ),
-                  child: Slider(
-                    min: 0.0,
-                    max: _duration.inSeconds.toDouble(),
-                    value: _position.inSeconds.toDouble().clamp(0.0, _duration.inSeconds.toDouble()),
-                    onChanged: (value) async {
-                      final position = Duration(seconds: value.toInt());
-                      await _audioPlayer.seek(position);
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        _formatDuration(_position),
-                        style: widget.timeTextStyle ?? const TextStyle(fontSize: 12),
+            child: StreamBuilder<PositionData>(
+              stream: _positionDataStream,
+              builder: (context, snapshot) {
+                final positionData = snapshot.data;
+                final position = positionData?.position ?? Duration.zero;
+                final duration = positionData?.duration ?? Duration.zero;
+
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        trackHeight: 4.0,
+                        activeTrackColor: activeColor,
+                        inactiveTrackColor: inactiveColor,
+                        thumbColor: activeColor,
+                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6.0),
+                        overlayColor: activeColor.withAlpha(51),
                       ),
-                      Text(
-                        _formatDuration(_duration),
-                        style: widget.timeTextStyle ?? const TextStyle(fontSize: 12),
+                      child: Slider(
+                        min: 0.0,
+                        max: duration.inSeconds.toDouble(),
+                        value: position.inSeconds.toDouble().clamp(0.0, duration.inSeconds.toDouble()),
+                        onChanged: (value) {
+                          _audioPlayer.seek(Duration(seconds: value.toInt()));
+                        },
                       ),
-                    ],
-                  ),
-                ),
-              ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            _formatDuration(position),
+                            style: widget.timeTextStyle ?? const TextStyle(fontSize: 12),
+                          ),
+                          Text(
+                            _formatDuration(duration),
+                            style: widget.timeTextStyle ?? const TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ],
