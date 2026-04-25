@@ -1,3 +1,7 @@
+## 0.0.7
+
+- Fully resolved `unsendable object` crash by refactoring isolate calls into static methods, ensuring no state capturing occurs.
+
 ## 0.0.6
 
 - Fixed `00:00` duration issue in `OmniAudioPlayer` by adding a manual duration fetch fallback.

@@ -74,17 +74,19 @@ class _OmniVideoPlayerState extends State<OmniVideoPlayer> {
     return false;
   }
 
+  static Future<bool> _runBackgroundValidation(String? url, String? filePath) async {
+    return await Isolate.run(() => _validateMediaInBackground({
+          'url': url,
+          'file': filePath,
+        }));
+  }
+
   Future<void> _initializePlayer() async {
     try {
       if (widget.useBackgroundValidation) {
-        final mediaUrl = widget.url;
-        final filePath = widget.file?.path;
-        final isValid = await Isolate.run(() => _validateMediaInBackground({
-          'url': mediaUrl,
-          'file': filePath,
-        }));
+        final isValid = await _runBackgroundValidation(widget.url, widget.file?.path);
         if (!isValid) {
-          debugPrint("OmniVideoPlayer: Validation failed for $mediaUrl / $filePath");
+          debugPrint("OmniVideoPlayer: Validation failed");
           // We don't throw anymore to let the native player try its own logic
         }
       }

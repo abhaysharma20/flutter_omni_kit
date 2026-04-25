@@ -95,14 +95,17 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
     return false;
   }
 
+  static Future<bool> _runBackgroundValidation(String url) async {
+    return await Isolate.run(() => _validateMediaInBackground({
+          'url': url,
+        }));
+  }
+
   Future<void> _initAudio() async {
     if (widget.useBackgroundValidation) {
-      final mediaUrl = widget.url;
-      final isValid = await Isolate.run(() => _validateMediaInBackground({
-        'url': mediaUrl,
-      }));
+      final isValid = await _runBackgroundValidation(widget.url);
       if (!isValid) {
-        debugPrint("OmniAudioPlayer: Validation failed for $mediaUrl");
+        debugPrint("OmniAudioPlayer: Validation failed for ${widget.url}");
       }
     }
 
