@@ -1,3 +1,9 @@
+## 0.0.6
+
+- Fixed `00:00` duration issue in `OmniAudioPlayer` by adding a manual duration fetch fallback.
+- Improved `useBackgroundValidation` compatibility by using `GET` headers instead of `HEAD` requests.
+- Made background validation non-blocking to allow native player fallbacks.
+
 ## 0.0.5
 
 - Fixed `unsendable object` crash when using `useBackgroundValidation: true`. Improved isolate memory safety by avoiding state capturing.

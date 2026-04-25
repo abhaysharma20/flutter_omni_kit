@@ -81,13 +81,12 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
     try {
       if (url != null) {
         if (url.startsWith('http')) {
-          final uri = Uri.parse(url);
-          final request = await HttpClient().headUrl(uri);
+          final client = HttpClient();
+          final request = await client.getUrl(Uri.parse(url));
           final response = await request.close();
-          return response.statusCode >= 200 && response.statusCode < 400;
+          return response.statusCode < 400;
         } else {
-          final file = File(url);
-          return file.existsSync();
+          return File(url).existsSync();
         }
       }
     } catch (e) {
@@ -103,11 +102,20 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
         'url': mediaUrl,
       }));
       if (!isValid) {
-        throw Exception("Media validation failed. The URL/file may be unreachable or missing.");
+        debugPrint("OmniAudioPlayer: Validation failed for $mediaUrl");
       }
     }
 
     await _audioPlayer.setSourceUrl(widget.url);
+    
+    // Fallback: Manually fetch duration if not emitted by stream
+    Future.delayed(const Duration(milliseconds: 800), () async {
+      final d = await _audioPlayer.getDuration();
+      if (d != null && mounted && _duration == Duration.zero) {
+        setState(() => _duration = d);
+      }
+    });
+
     if (widget.autoPlay) {
       await _audioPlayer.resume();
     }

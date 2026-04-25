@@ -61,13 +61,12 @@ class _OmniVideoPlayerState extends State<OmniVideoPlayer> {
     
     try {
       if (filePath != null) {
-        final file = File(filePath);
-        return file.existsSync();
+        return File(filePath).existsSync();
       } else if (url != null) {
-        final uri = Uri.parse(url);
-        final request = await HttpClient().headUrl(uri);
+        final client = HttpClient();
+        final request = await client.getUrl(Uri.parse(url));
         final response = await request.close();
-        return response.statusCode >= 200 && response.statusCode < 400;
+        return response.statusCode < 400;
       }
     } catch (e) {
       return false;
@@ -85,7 +84,8 @@ class _OmniVideoPlayerState extends State<OmniVideoPlayer> {
           'file': filePath,
         }));
         if (!isValid) {
-          throw Exception("Media validation failed. The file may not exist or the URL is unreachable.");
+          debugPrint("OmniVideoPlayer: Validation failed for $mediaUrl / $filePath");
+          // We don't throw anymore to let the native player try its own logic
         }
       }
 
