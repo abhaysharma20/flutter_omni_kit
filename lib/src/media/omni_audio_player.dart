@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:isolate';
 import 'package:flutter/material.dart';
-import 'package:audioplayers/audioplayers.dart';
+import 'package:just_audio/just_audio.dart';
 
 class OmniAudioPlayer extends StatefulWidget {
   final String url;
@@ -40,44 +40,33 @@ class OmniAudioPlayer extends StatefulWidget {
 
 class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
   late AudioPlayer _audioPlayer;
-  bool _isPlaying = false;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _audioPlayer = AudioPlayer();
-
-    _audioPlayer.onPlayerStateChanged.listen((state) {
-      if (mounted) {
-        setState(() {
-          _isPlaying = state == PlayerState.playing;
-        });
+    
+    // Listen for duration updates
+    _audioPlayer.durationStream.listen((d) {
+      if (mounted && d != null) {
+        setState(() => _duration = d);
       }
     });
 
-    _audioPlayer.onDurationChanged.listen((newDuration) {
+    // Listen for position updates
+    _audioPlayer.positionStream.listen((p) {
       if (mounted) {
-        setState(() {
-          _duration = newDuration;
-        });
+        setState(() => _position = p);
       }
     });
 
-    _audioPlayer.onPositionChanged.listen((newPosition) {
+    // Listen for buffering/loading state
+    _audioPlayer.processingStateStream.listen((state) {
       if (mounted) {
-        setState(() {
-          _position = newPosition;
-        });
-        // Aggressively check for duration if it's still zero
-        if (_duration == Duration.zero) {
-          _audioPlayer.getDuration().then((d) {
-            if (d != null && d != Duration.zero && mounted) {
-              setState(() => _duration = d);
-            }
-          });
-        }
+        setState(() => _isLoading = state == ProcessingState.buffering || state == ProcessingState.loading);
       }
     });
 
@@ -118,21 +107,20 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
     }
 
     try {
-      await _audioPlayer.setSource(UrlSource(widget.url));
+      final duration = await _audioPlayer.setUrl(widget.url);
+      if (mounted && duration != null) {
+        setState(() {
+          _duration = duration;
+          _isLoading = false;
+        });
+      }
       
-      // Fetch duration after source is set
-      Future.delayed(const Duration(milliseconds: 1200), () async {
-        final d = await _audioPlayer.getDuration();
-        if (d != null && mounted) {
-          setState(() => _duration = d);
-        }
-      });
-
       if (widget.autoPlay) {
-        await _audioPlayer.resume();
+        _audioPlayer.play();
       }
     } catch (e) {
       debugPrint("OmniAudioPlayer Error: $e");
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -163,23 +151,32 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
       ),
       child: Row(
         children: [
-          IconButton(
-            icon: Icon(
-              _isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
-            ),
-            iconSize: widget.iconSize,
-            color: activeColor,
-            onPressed: () async {
-              if (_isPlaying) {
-                await _audioPlayer.pause();
-              } else {
-                await _audioPlayer.resume();
-                // Force a duration refresh when playing
-                final d = await _audioPlayer.getDuration();
-                if (d != null && mounted) {
-                  setState(() => _duration = d);
-                }
+          StreamBuilder<bool>(
+            stream: _audioPlayer.playingStream,
+            builder: (context, snapshot) {
+              final isPlaying = snapshot.data ?? false;
+              if (_isLoading) {
+                return SizedBox(
+                  width: widget.iconSize,
+                  height: widget.iconSize,
+                  child: const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                );
               }
+              return IconButton(
+                icon: Icon(isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled),
+                iconSize: widget.iconSize,
+                color: activeColor,
+                onPressed: () {
+                  if (isPlaying) {
+                    _audioPlayer.pause();
+                  } else {
+                    _audioPlayer.play();
+                  }
+                },
+              );
             },
           ),
           const SizedBox(width: 8),

@@ -81,7 +81,7 @@ class MediaPage extends StatelessWidget {
           const Text("Omni Audio Player", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           const SizedBox(height: 8),
           const OmniAudioPlayer(
-            url: 'https://www.w3schools.com/html/horse.mp3',
+            url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
             useBackgroundValidation: true,
           ),
           const SizedBox(height: 24),

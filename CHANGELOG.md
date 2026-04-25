@@ -1,3 +1,13 @@
+## 0.0.12
+
+- **Major Upgrade**: Switched audio engine to `just_audio` for professional-grade streaming reliability.
+- Fixed duration detection once and for all (metadata now fetches almost instantly).
+- Added buffering/loading indicators to the audio player UI.
+
+## 0.0.11
+
+- Updated example audio to a longer, high-quality stream for better seeking and UX testing.
+
 ## 0.0.10
 
 - Implemented "Aggressive Duration Fetching" in `OmniAudioPlayer` to resolve `00:00` duration on some devices.
