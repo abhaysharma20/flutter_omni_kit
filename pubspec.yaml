@@ -1,0 +1,24 @@
+name: flutter_omni_kit
+description: A comprehensive, production-grade collection of Flutter media widgets, document previewers, and Dart extension methods designed specifically for real-world app development.
+version: 0.0.3
+repository: https://github.com/placeholder/flutter_omni_kit
+homepage: https://github.com/placeholder/flutter_omni_kit
+
+environment:
+  sdk: ">=3.2.0 <4.0.0"
+  flutter: ">=3.16.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  video_player: ^2.8.0
+  chewie: ^1.7.5
+  audioplayers: ^6.6.0
+  syncfusion_flutter_pdfviewer: ^31.1.19
+  open_filex: ^4.4.0
+  cached_network_image: ^3.3.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
