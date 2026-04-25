@@ -1,3 +1,8 @@
+## 0.0.10
+
+- Implemented "Aggressive Duration Fetching" in `OmniAudioPlayer` to resolve `00:00` duration on some devices.
+- Switched example streams to W3Schools test files for maximum cross-platform compatibility.
+
 ## 0.0.9
 
 - Fixed iOS `CoreMedia` error `-12939` (byte range length mismatch) by updating example streams to high-performance Google Cloud buckets.

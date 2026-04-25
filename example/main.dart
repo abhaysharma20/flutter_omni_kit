@@ -74,14 +74,14 @@ class MediaPage extends StatelessWidget {
           const Text("Omni Video Player", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           const SizedBox(height: 8),
           const OmniVideoPlayer(
-            url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+            url: 'https://www.w3schools.com/html/mov_bbb.mp4',
             useBackgroundValidation: true,
           ),
           const SizedBox(height: 24),
           const Text("Omni Audio Player", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           const SizedBox(height: 8),
           const OmniAudioPlayer(
-            url: 'https://codeskulptor-demos.commondatastorage.googleapis.com/GalaxyInvaders/theme_01.mp3',
+            url: 'https://www.w3schools.com/html/horse.mp3',
             useBackgroundValidation: true,
           ),
           const SizedBox(height: 24),

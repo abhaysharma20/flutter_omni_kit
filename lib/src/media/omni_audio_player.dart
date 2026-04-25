@@ -70,6 +70,14 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
         setState(() {
           _position = newPosition;
         });
+        // Aggressively check for duration if it's still zero
+        if (_duration == Duration.zero) {
+          _audioPlayer.getDuration().then((d) {
+            if (d != null && d != Duration.zero && mounted) {
+              setState(() => _duration = d);
+            }
+          });
+        }
       }
     });
 
