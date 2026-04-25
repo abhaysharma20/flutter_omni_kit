@@ -1,3 +1,8 @@
+## 0.0.8
+
+- Updated `OmniAudioPlayer` to use the modern `UrlSource` API (fixing playback and duration issues).
+- Added detailed error reporting to `OmniVideoPlayer` UI for easier debugging of network/native issues.
+
 ## 0.0.7
 
 - Fully resolved `unsendable object` crash by refactoring isolate calls into static methods, ensuring no state capturing occurs.

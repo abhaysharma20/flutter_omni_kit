@@ -109,18 +109,22 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
       }
     }
 
-    await _audioPlayer.setSourceUrl(widget.url);
-    
-    // Fallback: Manually fetch duration if not emitted by stream
-    Future.delayed(const Duration(milliseconds: 800), () async {
-      final d = await _audioPlayer.getDuration();
-      if (d != null && mounted && _duration == Duration.zero) {
-        setState(() => _duration = d);
-      }
-    });
+    try {
+      await _audioPlayer.setSource(UrlSource(widget.url));
+      
+      // Fetch duration after source is set
+      Future.delayed(const Duration(milliseconds: 1200), () async {
+        final d = await _audioPlayer.getDuration();
+        if (d != null && mounted) {
+          setState(() => _duration = d);
+        }
+      });
 
-    if (widget.autoPlay) {
-      await _audioPlayer.resume();
+      if (widget.autoPlay) {
+        await _audioPlayer.resume();
+      }
+    } catch (e) {
+      debugPrint("OmniAudioPlayer Error: $e");
     }
   }
 

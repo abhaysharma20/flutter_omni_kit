@@ -140,10 +140,12 @@ class _OmniVideoPlayerState extends State<OmniVideoPlayer> {
       }
       return Container(
         color: widget.backgroundColor,
-        child: const Center(
+        padding: const EdgeInsets.all(8),
+        child: Center(
           child: Text(
-            'Failed to load video.',
-            style: TextStyle(color: Colors.red),
+            'Video Error: $_errorMessage',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.red, fontSize: 12),
           ),
         ),
       );
