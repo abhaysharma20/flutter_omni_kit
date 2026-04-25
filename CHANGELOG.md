@@ -1,3 +1,9 @@
+## 0.0.13
+
+- Refactored `OmniAudioPlayer` to use a professional `PositionData` stream pattern with `rxdart`.
+- Fixed duration sniffing for servers that omit the `Content-Length` header (like `samplelib`).
+- Added buffering/loading spinners to the audio UI.
+
 ## 0.0.12
 
 - **Major Upgrade**: Switched audio engine to `just_audio` for professional-grade streaming reliability.
