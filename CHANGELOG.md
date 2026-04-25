@@ -1,3 +1,9 @@
+## 0.0.9
+
+- Fixed iOS `CoreMedia` error `-12939` (byte range length mismatch) by updating example streams to high-performance Google Cloud buckets.
+- Enhanced `OmniAudioPlayer` duration detection by forcing a refresh on play.
+- Updated `example/main.dart` with a complete, modern showcase application.
+
 ## 0.0.8
 
 - Updated `OmniAudioPlayer` to use the modern `UrlSource` API (fixing playback and duration issues).

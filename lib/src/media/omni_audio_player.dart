@@ -166,6 +166,11 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
                 await _audioPlayer.pause();
               } else {
                 await _audioPlayer.resume();
+                // Force a duration refresh when playing
+                final d = await _audioPlayer.getDuration();
+                if (d != null && mounted) {
+                  setState(() => _duration = d);
+                }
               }
             },
           ),
