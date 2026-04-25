@@ -78,9 +78,11 @@ class _OmniVideoPlayerState extends State<OmniVideoPlayer> {
   Future<void> _initializePlayer() async {
     try {
       if (widget.useBackgroundValidation) {
+        final mediaUrl = widget.url;
+        final filePath = widget.file?.path;
         final isValid = await Isolate.run(() => _validateMediaInBackground({
-          'url': widget.url,
-          'file': widget.file?.path,
+          'url': mediaUrl,
+          'file': filePath,
         }));
         if (!isValid) {
           throw Exception("Media validation failed. The file may not exist or the URL is unreachable.");

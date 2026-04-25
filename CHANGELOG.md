@@ -1,3 +1,7 @@
+## 0.0.5
+
+- Fixed `unsendable object` crash when using `useBackgroundValidation: true`. Improved isolate memory safety by avoiding state capturing.
+
 ## 0.0.4
 
 - **New UI Components**:

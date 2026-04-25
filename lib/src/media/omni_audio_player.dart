@@ -98,8 +98,9 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
 
   Future<void> _initAudio() async {
     if (widget.useBackgroundValidation) {
+      final mediaUrl = widget.url;
       final isValid = await Isolate.run(() => _validateMediaInBackground({
-        'url': widget.url,
+        'url': mediaUrl,
       }));
       if (!isValid) {
         throw Exception("Media validation failed. The URL/file may be unreachable or missing.");
