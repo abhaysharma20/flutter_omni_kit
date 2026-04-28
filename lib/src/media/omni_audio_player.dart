@@ -117,7 +117,12 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
     }
 
     try {
-      await _audioPlayer.setUrl(widget.url);
+      if (widget.url.startsWith('http')) {
+        await _audioPlayer.setAudioSource(LockCachingAudioSource(Uri.parse(widget.url)));
+      } else {
+        await _audioPlayer.setUrl(widget.url);
+      }
+      
       if (widget.autoPlay) {
         _audioPlayer.play();
       }

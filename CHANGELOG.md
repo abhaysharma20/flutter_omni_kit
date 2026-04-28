@@ -1,3 +1,7 @@
+## 0.0.18
+
+- Implemented `LockCachingAudioSource` for all network URLs to force native playback proxying. This bypasses missing HTTP headers on remote servers, instantly capturing the total duration in `initState` and fully unlocking Spotify-style slider seeking for ALL servers.
+
 ## 0.0.17
 
 - Implemented a "Spotify-style" smooth slider that caches the drag value and only seeks the native player `onChangeEnd`. This completely eliminates playback stuttering and buffering loops when dragging the slider.
