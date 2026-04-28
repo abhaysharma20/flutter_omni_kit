@@ -1,3 +1,8 @@
+## 0.0.17
+
+- Implemented a "Spotify-style" smooth slider that caches the drag value and only seeks the native player `onChangeEnd`. This completely eliminates playback stuttering and buffering loops when dragging the slider.
+- The slider `max` value now expands seamlessly using the stream's `bufferedPosition` when the total duration is unknown, allowing users to scrub forward into dynamically downloaded content.
+
 ## 0.0.16
 
 - Added continuous internal polling for duration updates to correctly support servers that omit the `Accept-Ranges` or `Content-Length` headers.

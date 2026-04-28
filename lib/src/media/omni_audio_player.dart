@@ -42,6 +42,8 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
   bool _hasError = false;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
+  Duration _bufferedPosition = Duration.zero;
+  double? _dragValue;
 
   @override
   void initState() {
@@ -61,6 +63,12 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
             _duration = currentDuration;
           }
         });
+      }
+    });
+
+    _audioPlayer.bufferedPositionStream.listen((b) {
+      if (mounted) {
+        setState(() => _bufferedPosition = b);
       }
     });
 
@@ -202,11 +210,14 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
               children: [
                 Builder(
                   builder: (context) {
-                    final double effectiveMax = _duration > _position 
+                    final double effectiveMax = _duration > _bufferedPosition 
                         ? _duration.inSeconds.toDouble() 
-                        : _position.inSeconds.toDouble();
+                        : (_bufferedPosition > _position ? _bufferedPosition.inSeconds.toDouble() : _position.inSeconds.toDouble());
                     final double safeMax = effectiveMax > 0 ? effectiveMax : 1.0;
-                    final double safePosition = _position.inSeconds.toDouble().clamp(0.0, safeMax);
+                    
+                    // Display either the active drag value or the actual position
+                    final currentDisplaySeconds = _dragValue ?? _position.inSeconds.toDouble();
+                    final double safePosition = currentDisplaySeconds.clamp(0.0, safeMax);
 
                     return SliderTheme(
                       data: SliderTheme.of(context).copyWith(
@@ -221,12 +232,26 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
                         min: 0.0,
                         max: safeMax,
                         value: safePosition,
+                        onChangeStart: effectiveMax > 0
+                            ? (value) {
+                                setState(() {
+                                  _dragValue = value;
+                                });
+                              }
+                            : null,
                         onChanged: effectiveMax > 0
                             ? (value) {
                                 setState(() {
-                                  _position = Duration(seconds: value.toInt());
+                                  _dragValue = value;
                                 });
+                              }
+                            : null,
+                        onChangeEnd: effectiveMax > 0
+                            ? (value) {
                                 _audioPlayer.seek(Duration(seconds: value.toInt()));
+                                setState(() {
+                                  _dragValue = null;
+                                });
                               }
                             : null,
                       ),
@@ -239,7 +264,7 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        _formatDuration(_position),
+                        _formatDuration(_dragValue != null ? Duration(seconds: _dragValue!.toInt()) : _position),
                         style: widget.timeTextStyle ?? const TextStyle(fontSize: 12),
                       ),
                       Text(
