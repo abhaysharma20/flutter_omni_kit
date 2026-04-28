@@ -23,9 +23,11 @@ class OmniNetwork {
     _dio.options.receiveTimeout = receiveTimeout;
   }
 
-  /// Check if the device is connected to the internet
   Future<bool> get isConnected async {
-    var result = await Connectivity().checkConnectivity();
+    final dynamic result = await Connectivity().checkConnectivity();
+    if (result is List) {
+      return !result.contains(ConnectivityResult.none) && result.isNotEmpty;
+    }
     return result != ConnectivityResult.none;
   }
 

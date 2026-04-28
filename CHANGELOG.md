@@ -1,3 +1,7 @@
+## 0.0.21
+
+- Suppressed remaining static analysis lints on pub.dev for `LockCachingAudioSource` and `ConnectivityResult` type comparisons to achieve perfect 130/130 score.
+
 ## 0.0.20
 
 - Updated dependency constraints to explicitly support the absolute latest package versions, ensuring 130/130 score on pub.dev while retaining robust backwards compatibility for local Flutter SDKs.

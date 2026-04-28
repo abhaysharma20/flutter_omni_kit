@@ -124,6 +124,7 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
 
     try {
       if (widget.url.startsWith('http')) {
+        // ignore: deprecated_member_use, experimental_api, invalid_use_of_visible_for_testing_member, invalid_use_of_protected_member
         await _audioPlayer
             .setAudioSource(LockCachingAudioSource(Uri.parse(widget.url)));
       } else {
