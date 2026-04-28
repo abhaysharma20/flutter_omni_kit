@@ -1,3 +1,9 @@
+## 0.0.14
+
+- Fixed a critical connection leak in the background media validation isolate that prevented audio from loading.
+- Made the audio seekbar robust against 0-duration streams to prevent assertion errors.
+- Added a visual error icon to the audio player UI if the stream fails to load.
+
 ## 0.0.13
 
 - Refactored `OmniAudioPlayer` to use a professional `PositionData` stream pattern with `rxdart`.

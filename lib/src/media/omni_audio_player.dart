@@ -48,6 +48,8 @@ class OmniAudioPlayer extends StatefulWidget {
 class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
   late AudioPlayer _audioPlayer;
 
+  bool _hasError = false;
+
   @override
   void initState() {
     super.initState();
@@ -68,12 +70,7 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
     final url = args['url'] as String?;
     try {
       if (url != null) {
-        if (url.startsWith('http')) {
-          final client = HttpClient();
-          final request = await client.getUrl(Uri.parse(url));
-          final response = await request.close();
-          return response.statusCode < 400;
-        } else {
+        if (!url.startsWith('http')) {
           return File(url).existsSync();
         }
       }
@@ -84,6 +81,7 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
   }
 
   static Future<bool> _runBackgroundValidation(String url) async {
+    if (url.startsWith('http')) return true; // just_audio handles network async safely
     return await Isolate.run(() => _validateMediaInBackground({
           'url': url,
         }));
@@ -91,7 +89,11 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
 
   Future<void> _initAudio() async {
     if (widget.useBackgroundValidation) {
-      await _runBackgroundValidation(widget.url);
+      final isValid = await _runBackgroundValidation(widget.url);
+      if (!isValid && mounted) {
+        setState(() => _hasError = true);
+        return;
+      }
     }
 
     try {
@@ -101,6 +103,7 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
       }
     } catch (e) {
       debugPrint("OmniAudioPlayer Error: $e");
+      if (mounted) setState(() => _hasError = true);
     }
   }
 
@@ -138,7 +141,17 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
               final processingState = playerState?.processingState;
               final playing = playerState?.playing ?? false;
 
-              if (processingState == ProcessingState.loading ||
+              if (_hasError) {
+                return IconButton(
+                  icon: const Icon(Icons.error_outline),
+                  iconSize: widget.iconSize,
+                  color: Colors.red,
+                  onPressed: () {
+                    setState(() => _hasError = false);
+                    _initAudio(); // Retry
+                  },
+                );
+              } else if (processingState == ProcessingState.loading ||
                   processingState == ProcessingState.buffering) {
                 return Container(
                   margin: const EdgeInsets.all(8.0),
@@ -193,11 +206,13 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
                       ),
                       child: Slider(
                         min: 0.0,
-                        max: duration.inSeconds.toDouble(),
-                        value: position.inSeconds.toDouble().clamp(0.0, duration.inSeconds.toDouble()),
-                        onChanged: (value) {
-                          _audioPlayer.seek(Duration(seconds: value.toInt()));
-                        },
+                        max: duration.inSeconds > 0 ? duration.inSeconds.toDouble() : 1.0,
+                        value: position.inSeconds.toDouble().clamp(0.0, duration.inSeconds > 0 ? duration.inSeconds.toDouble() : 1.0),
+                        onChanged: duration.inSeconds > 0
+                            ? (value) {
+                                _audioPlayer.seek(Duration(seconds: value.toInt()));
+                              }
+                            : null,
                       ),
                     ),
                     Padding(
