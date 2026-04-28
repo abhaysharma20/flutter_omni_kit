@@ -2,15 +2,6 @@ import 'dart:io';
 import 'dart:isolate';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:rxdart/rxdart.dart';
-
-class PositionData {
-  final Duration position;
-  final Duration bufferedPosition;
-  final Duration duration;
-
-  PositionData(this.position, this.bufferedPosition, this.duration);
-}
 
 class OmniAudioPlayer extends StatefulWidget {
   final String url;
@@ -49,22 +40,30 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
   late AudioPlayer _audioPlayer;
 
   bool _hasError = false;
+  Duration _duration = Duration.zero;
+  Duration _position = Duration.zero;
 
   @override
   void initState() {
     super.initState();
     _audioPlayer = AudioPlayer();
+
+    // Explicitly update position state on each tick
+    _audioPlayer.positionStream.listen((p) {
+      if (mounted) {
+        setState(() => _position = p);
+      }
+    });
+
+    // Explicitly update duration state when it changes
+    _audioPlayer.durationStream.listen((d) {
+      if (mounted) {
+        setState(() => _duration = d ?? Duration.zero);
+      }
+    });
+
     _initAudio();
   }
-
-  /// Combine position, buffered position, and duration into a single stream
-  Stream<PositionData> get _positionDataStream =>
-      Rx.combineLatest3<Duration, Duration, Duration?, PositionData>(
-          _audioPlayer.positionStream,
-          _audioPlayer.bufferedPositionStream,
-          _audioPlayer.durationStream,
-          (position, bufferedPosition, duration) =>
-              PositionData(position, bufferedPosition, duration ?? Duration.zero));
 
   static Future<bool> _validateMediaInBackground(Map<String, dynamic> args) async {
     final url = args['url'] as String?;
@@ -185,55 +184,50 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: StreamBuilder<PositionData>(
-              stream: _positionDataStream,
-              builder: (context, snapshot) {
-                final positionData = snapshot.data;
-                final position = positionData?.position ?? Duration.zero;
-                final duration = positionData?.duration ?? Duration.zero;
-
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SliderTheme(
-                      data: SliderTheme.of(context).copyWith(
-                        trackHeight: 4.0,
-                        activeTrackColor: activeColor,
-                        inactiveTrackColor: inactiveColor,
-                        thumbColor: activeColor,
-                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6.0),
-                        overlayColor: activeColor.withAlpha(51),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    trackHeight: 4.0,
+                    activeTrackColor: activeColor,
+                    inactiveTrackColor: inactiveColor,
+                    thumbColor: activeColor,
+                    thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6.0),
+                    overlayColor: activeColor.withAlpha(51),
+                  ),
+                  child: Slider(
+                    min: 0.0,
+                    max: _duration.inSeconds > 0 ? _duration.inSeconds.toDouble() : 1.0,
+                    value: _position.inSeconds.toDouble().clamp(0.0, _duration.inSeconds > 0 ? _duration.inSeconds.toDouble() : 1.0),
+                    onChanged: _duration.inSeconds > 0
+                        ? (value) {
+                            // Update local state immediately for smooth UI drag
+                            setState(() {
+                              _position = Duration(seconds: value.toInt());
+                            });
+                            _audioPlayer.seek(Duration(seconds: value.toInt()));
+                          }
+                        : null,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _formatDuration(_position),
+                        style: widget.timeTextStyle ?? const TextStyle(fontSize: 12),
                       ),
-                      child: Slider(
-                        min: 0.0,
-                        max: duration.inSeconds > 0 ? duration.inSeconds.toDouble() : 1.0,
-                        value: position.inSeconds.toDouble().clamp(0.0, duration.inSeconds > 0 ? duration.inSeconds.toDouble() : 1.0),
-                        onChanged: duration.inSeconds > 0
-                            ? (value) {
-                                _audioPlayer.seek(Duration(seconds: value.toInt()));
-                              }
-                            : null,
+                      Text(
+                        _formatDuration(_duration),
+                        style: widget.timeTextStyle ?? const TextStyle(fontSize: 12),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            _formatDuration(position),
-                            style: widget.timeTextStyle ?? const TextStyle(fontSize: 12),
-                          ),
-                          Text(
-                            _formatDuration(duration),
-                            style: widget.timeTextStyle ?? const TextStyle(fontSize: 12),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                );
-              },
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],

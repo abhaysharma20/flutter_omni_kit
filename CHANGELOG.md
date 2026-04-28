@@ -1,3 +1,8 @@
+## 0.0.15
+
+- Simplified audio player architecture by reverting to standard state variables (`_duration`, `_position`) for guaranteed UI refresh with each audio tick.
+- Improved drag/seek performance in the audio slider.
+
 ## 0.0.14
 
 - Fixed a critical connection leak in the background media validation isolate that prevented audio from loading.
