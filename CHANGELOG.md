@@ -1,3 +1,7 @@
+## 0.0.19
+
+- Added a seamless `useGlassEffect` toggle to both `OmniAudioPlayer` and `OmniVideoPlayer` for an iOS-like frosted glass aesthetic, automatically integrating with `OmniGlassCard`.
+
 ## 0.0.18
 
 - Implemented `LockCachingAudioSource` for all network URLs to force native playback proxying. This bypasses missing HTTP headers on remote servers, instantly capturing the total duration in `initState` and fully unlocking Spotify-style slider seeking for ALL servers.

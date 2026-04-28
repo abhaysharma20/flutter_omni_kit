@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:isolate';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import '../ui/omni_glass_card.dart';
 
 class OmniAudioPlayer extends StatefulWidget {
   final String url;
@@ -17,6 +18,7 @@ class OmniAudioPlayer extends StatefulWidget {
   final BorderRadiusGeometry? borderRadius;
   
   final bool useBackgroundValidation;
+  final bool useGlassEffect;
 
   const OmniAudioPlayer({
     super.key,
@@ -30,6 +32,7 @@ class OmniAudioPlayer extends StatefulWidget {
     this.padding = const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
     this.borderRadius,
     this.useBackgroundValidation = false,
+    this.useGlassEffect = false,
   });
 
   @override
@@ -151,12 +154,8 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
     final activeColor = widget.activeColor ?? theme.primaryColor;
     final inactiveColor = widget.inactiveColor ?? activeColor.withAlpha(76);
 
-    return Container(
+    final playerRow = Padding(
       padding: widget.padding,
-      decoration: BoxDecoration(
-        color: widget.backgroundColor ?? Colors.grey.shade100,
-        borderRadius: widget.borderRadius ?? BorderRadius.circular(12),
-      ),
       child: Row(
         children: [
           StreamBuilder<PlayerState>(
@@ -284,6 +283,24 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
           ),
         ],
       ),
+    );
+
+    if (widget.useGlassEffect) {
+      return OmniGlassCard(
+        borderRadius: (widget.borderRadius as BorderRadius?) ?? BorderRadius.circular(12),
+        padding: EdgeInsets.zero,
+        color: widget.backgroundColor ?? Colors.white,
+        opacity: 0.15,
+        child: playerRow,
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: widget.backgroundColor ?? Colors.grey.shade100,
+        borderRadius: widget.borderRadius ?? BorderRadius.circular(12),
+      ),
+      child: playerRow,
     );
   }
 }

@@ -3,6 +3,7 @@ import 'dart:isolate';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
+import '../ui/omni_glass_card.dart';
 
 class OmniVideoPlayer extends StatefulWidget {
   final String? url;
@@ -23,6 +24,7 @@ class OmniVideoPlayer extends StatefulWidget {
   /// Whether to use a background Isolate to validate the media (e.g., DNS lookup or file check)
   /// before initializing the player. This prevents main-thread jank for slow connections.
   final bool useBackgroundValidation;
+  final bool useGlassEffect;
 
   const OmniVideoPlayer({
     super.key,
@@ -37,6 +39,7 @@ class OmniVideoPlayer extends StatefulWidget {
     this.materialProgressColors,
     this.backgroundColor = Colors.black,
     this.useBackgroundValidation = false,
+    this.useGlassEffect = false,
   }) : assert(url != null || file != null, 'Provide either a url or a file');
 
   @override
@@ -134,37 +137,50 @@ class _OmniVideoPlayerState extends State<OmniVideoPlayer> {
 
   @override
   Widget build(BuildContext context) {
+    Widget content;
+    
     if (_isError) {
       if (widget.errorBuilder != null) {
-        return widget.errorBuilder!(context, _errorMessage);
-      }
-      return Container(
-        color: widget.backgroundColor,
-        padding: const EdgeInsets.all(8),
-        child: Center(
-          child: Text(
-            'Video Error: $_errorMessage',
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.red, fontSize: 12),
+        content = widget.errorBuilder!(context, _errorMessage);
+      } else {
+        content = Container(
+          color: widget.useGlassEffect ? Colors.transparent : widget.backgroundColor,
+          padding: const EdgeInsets.all(8),
+          child: Center(
+            child: Text(
+              'Video Error: $_errorMessage',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.red, fontSize: 12),
+            ),
           ),
-        ),
-      );
-    }
-
-    if (_chewieController != null &&
+        );
+      }
+    } else if (_chewieController != null &&
         _chewieController!.videoPlayerController.value.isInitialized) {
-      return Container(
-        color: widget.backgroundColor,
+      content = Container(
+        color: widget.useGlassEffect ? Colors.transparent : widget.backgroundColor,
         child: AspectRatio(
           aspectRatio: widget.aspectRatio ?? _videoPlayerController.value.aspectRatio,
           child: Chewie(controller: _chewieController!),
         ),
       );
     } else {
-      return Container(
-        color: widget.backgroundColor,
+      content = Container(
+        color: widget.useGlassEffect ? Colors.transparent : widget.backgroundColor,
         child: widget.placeholder ?? const Center(child: CircularProgressIndicator()),
       );
     }
+
+    if (widget.useGlassEffect) {
+      return OmniGlassCard(
+        borderRadius: BorderRadius.circular(16),
+        padding: EdgeInsets.zero,
+        color: widget.backgroundColor,
+        opacity: 0.15,
+        child: content,
+      );
+    }
+    
+    return content;
   }
 }
