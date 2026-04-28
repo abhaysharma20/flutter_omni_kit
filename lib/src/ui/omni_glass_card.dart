@@ -39,10 +39,12 @@ class OmniGlassCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: color.withAlpha((opacity * 255).toInt()),
             borderRadius: borderRadius ?? BorderRadius.circular(20),
-            border: border ?? Border.all(
-              color: color.withAlpha((opacity * 2 * 255).toInt().clamp(0, 255)),
-              width: 1.5,
-            ),
+            border: border ??
+                Border.all(
+                  color: color
+                      .withAlpha((opacity * 2 * 255).toInt().clamp(0, 255)),
+                  width: 1.5,
+                ),
           ),
           child: child,
         ),

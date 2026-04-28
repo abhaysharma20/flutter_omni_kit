@@ -53,7 +53,8 @@ class _ShowcaseHomeState extends State<ShowcaseHome> {
           NavigationDestination(icon: Icon(Icons.play_circle), label: 'Media'),
           NavigationDestination(icon: Icon(Icons.auto_awesome), label: 'UI'),
           NavigationDestination(icon: Icon(Icons.settings), label: 'Utils'),
-          NavigationDestination(icon: Icon(Icons.extension), label: 'Extensions'),
+          NavigationDestination(
+              icon: Icon(Icons.extension), label: 'Extensions'),
         ],
       ),
     );
@@ -71,23 +72,28 @@ class MediaPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Text("Omni Video Player", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          const Text("Omni Video Player",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           const SizedBox(height: 8),
           const OmniVideoPlayer(
             url: 'https://www.w3schools.com/html/mov_bbb.mp4',
             useBackgroundValidation: true,
           ),
           const SizedBox(height: 24),
-          const Text("Omni Audio Player", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          const Text("Omni Audio Player",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           const SizedBox(height: 8),
           const OmniAudioPlayer(
             url: 'https://samplelib.com/mp3/sample-speech-1m.mp3',
             useBackgroundValidation: true,
           ),
           const SizedBox(height: 24),
-          const Text("File Previewer (Asset Example)", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          const Text("File Previewer (Asset Example)",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           const SizedBox(height: 8),
-          const Center(child: Text("Previewing images/PDFs is as easy as passing the path!")),
+          const Center(
+              child: Text(
+                  "Previewing images/PDFs is as easy as passing the path!")),
         ],
       ),
     );
@@ -101,7 +107,8 @@ class UIPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Modern UI Components'), centerTitle: true),
+      appBar:
+          AppBar(title: const Text('Modern UI Components'), centerTitle: true),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -122,7 +129,10 @@ class UIPage extends StatelessWidget {
                   SizedBox(height: 12),
                   Text(
                     "OmniGlassCard",
-                    style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 8),
                   Text(
@@ -134,10 +144,11 @@ class UIPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 32),
-            const Text(
-              "OmniShimmer (Loading States)", 
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)
-            ),
+            const Text("OmniShimmer (Loading States)",
+                style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16)),
             const SizedBox(height: 16),
             Card(
               elevation: 0,
@@ -180,7 +191,8 @@ class _UtilsPageState extends State<UtilsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Infrastructure Utils'), centerTitle: true),
+      appBar:
+          AppBar(title: const Text('Infrastructure Utils'), centerTitle: true),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -189,7 +201,8 @@ class _UtilsPageState extends State<UtilsPage> {
               blur: 5,
               color: Colors.deepPurple,
               opacity: 0.05,
-              child: Text("One-liner Storage & Network", style: TextStyle(fontWeight: FontWeight.bold)),
+              child: Text("One-liner Storage & Network",
+                  style: TextStyle(fontWeight: FontWeight.bold)),
             ),
             const SizedBox(height: 16),
             ListTile(
@@ -215,7 +228,9 @@ class _UtilsPageState extends State<UtilsPage> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       behavior: SnackBarBehavior.floating,
-                      content: Text(connected ? "Online! Connectivity working." : "Offline! No connection."),
+                      content: Text(connected
+                          ? "Online! Connectivity working."
+                          : "Offline! No connection."),
                     ),
                   );
                 }
@@ -241,7 +256,8 @@ class ExtensionsPage extends StatelessWidget {
         children: [
           _extTile("String.capitalize", "hello world".capitalize),
           _extTile("String.maskEmail", "abhay.sharma@email.com".maskEmail()),
-          _extTile("DateTime.timeAgo", DateTime.now().subtractDays(2).timeAgo()),
+          _extTile(
+              "DateTime.timeAgo", DateTime.now().subtractDays(2).timeAgo()),
           _extTile("Num.toCompact", 2500000.toCompact()),
           _extTile("Num.toCurrency", 5432.10.toCurrency(symbol: '₹')),
         ],
@@ -252,7 +268,11 @@ class ExtensionsPage extends StatelessWidget {
   Widget _extTile(String title, String result) {
     return ListTile(
       title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
-      subtitle: Text(result, style: const TextStyle(color: Colors.deepPurple, fontWeight: FontWeight.bold, fontSize: 16)),
+      subtitle: Text(result,
+          style: const TextStyle(
+              color: Colors.deepPurple,
+              fontWeight: FontWeight.bold,
+              fontSize: 16)),
     );
   }
 }

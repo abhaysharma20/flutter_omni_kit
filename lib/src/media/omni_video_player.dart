@@ -8,19 +8,19 @@ import '../ui/omni_glass_card.dart';
 class OmniVideoPlayer extends StatefulWidget {
   final String? url;
   final File? file;
-  
+
   /// Player configuration
   final bool autoPlay;
   final bool looping;
   final bool showControls;
   final double? aspectRatio;
-  
+
   /// Custom UI Elements
   final Widget? placeholder;
   final Widget Function(BuildContext, String)? errorBuilder;
   final ChewieProgressColors? materialProgressColors;
   final Color backgroundColor;
-  
+
   /// Whether to use a background Isolate to validate the media (e.g., DNS lookup or file check)
   /// before initializing the player. This prevents main-thread jank for slow connections.
   final bool useBackgroundValidation;
@@ -58,10 +58,11 @@ class _OmniVideoPlayerState extends State<OmniVideoPlayer> {
     _initializePlayer();
   }
 
-  static Future<bool> _validateMediaInBackground(Map<String, dynamic> args) async {
+  static Future<bool> _validateMediaInBackground(
+      Map<String, dynamic> args) async {
     final url = args['url'] as String?;
     final filePath = args['file'] as String?;
-    
+
     try {
       if (filePath != null) {
         return File(filePath).existsSync();
@@ -77,7 +78,8 @@ class _OmniVideoPlayerState extends State<OmniVideoPlayer> {
     return false;
   }
 
-  static Future<bool> _runBackgroundValidation(String? url, String? filePath) async {
+  static Future<bool> _runBackgroundValidation(
+      String? url, String? filePath) async {
     return await Isolate.run(() => _validateMediaInBackground({
           'url': url,
           'file': filePath,
@@ -87,7 +89,8 @@ class _OmniVideoPlayerState extends State<OmniVideoPlayer> {
   Future<void> _initializePlayer() async {
     try {
       if (widget.useBackgroundValidation) {
-        final isValid = await _runBackgroundValidation(widget.url, widget.file?.path);
+        final isValid =
+            await _runBackgroundValidation(widget.url, widget.file?.path);
         if (!isValid) {
           debugPrint("OmniVideoPlayer: Validation failed");
           // We don't throw anymore to let the native player try its own logic
@@ -97,7 +100,8 @@ class _OmniVideoPlayerState extends State<OmniVideoPlayer> {
       if (widget.file != null) {
         _videoPlayerController = VideoPlayerController.file(widget.file!);
       } else if (widget.url != null) {
-        _videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(widget.url!));
+        _videoPlayerController =
+            VideoPlayerController.networkUrl(Uri.parse(widget.url!));
       }
 
       await _videoPlayerController.initialize();
@@ -107,17 +111,19 @@ class _OmniVideoPlayerState extends State<OmniVideoPlayer> {
         autoPlay: widget.autoPlay,
         looping: widget.looping,
         showControls: widget.showControls,
-        aspectRatio: widget.aspectRatio ?? _videoPlayerController.value.aspectRatio,
+        aspectRatio:
+            widget.aspectRatio ?? _videoPlayerController.value.aspectRatio,
         placeholder: widget.placeholder,
         materialProgressColors: widget.materialProgressColors,
-        errorBuilder: widget.errorBuilder ?? (context, errorMessage) {
-          return Center(
-            child: Text(
-              errorMessage,
-              style: const TextStyle(color: Colors.white),
-            ),
-          );
-        },
+        errorBuilder: widget.errorBuilder ??
+            (context, errorMessage) {
+              return Center(
+                child: Text(
+                  errorMessage,
+                  style: const TextStyle(color: Colors.white),
+                ),
+              );
+            },
       );
       setState(() {});
     } catch (e) {
@@ -138,13 +144,15 @@ class _OmniVideoPlayerState extends State<OmniVideoPlayer> {
   @override
   Widget build(BuildContext context) {
     Widget content;
-    
+
     if (_isError) {
       if (widget.errorBuilder != null) {
         content = widget.errorBuilder!(context, _errorMessage);
       } else {
         content = Container(
-          color: widget.useGlassEffect ? Colors.transparent : widget.backgroundColor,
+          color: widget.useGlassEffect
+              ? Colors.transparent
+              : widget.backgroundColor,
           padding: const EdgeInsets.all(8),
           child: Center(
             child: Text(
@@ -158,16 +166,20 @@ class _OmniVideoPlayerState extends State<OmniVideoPlayer> {
     } else if (_chewieController != null &&
         _chewieController!.videoPlayerController.value.isInitialized) {
       content = Container(
-        color: widget.useGlassEffect ? Colors.transparent : widget.backgroundColor,
+        color:
+            widget.useGlassEffect ? Colors.transparent : widget.backgroundColor,
         child: AspectRatio(
-          aspectRatio: widget.aspectRatio ?? _videoPlayerController.value.aspectRatio,
+          aspectRatio:
+              widget.aspectRatio ?? _videoPlayerController.value.aspectRatio,
           child: Chewie(controller: _chewieController!),
         ),
       );
     } else {
       content = Container(
-        color: widget.useGlassEffect ? Colors.transparent : widget.backgroundColor,
-        child: widget.placeholder ?? const Center(child: CircularProgressIndicator()),
+        color:
+            widget.useGlassEffect ? Colors.transparent : widget.backgroundColor,
+        child: widget.placeholder ??
+            const Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -180,7 +192,7 @@ class _OmniVideoPlayerState extends State<OmniVideoPlayer> {
         child: content,
       );
     }
-    
+
     return content;
   }
 }

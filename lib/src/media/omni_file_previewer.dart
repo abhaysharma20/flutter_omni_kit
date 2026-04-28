@@ -7,11 +7,12 @@ import 'package:cached_network_image/cached_network_image.dart';
 class OmniFilePreviewer extends StatelessWidget {
   final String pathOrUrl;
   final bool isNetwork;
-  
+
   /// Customization options
   final Widget? placeholderWidget;
   final Widget? errorWidget;
-  final Widget Function(BuildContext context, VoidCallback onOpenExternally)? unsupportedBuilder;
+  final Widget Function(BuildContext context, VoidCallback onOpenExternally)?
+      unsupportedBuilder;
 
   const OmniFilePreviewer({
     super.key,
@@ -36,11 +37,13 @@ class OmniFilePreviewer extends StatelessWidget {
   }
 
   bool get _isPdf => _extension == 'pdf';
-  bool get _isImage => ['png', 'jpg', 'jpeg', 'gif', 'webp'].contains(_extension);
+  bool get _isImage =>
+      ['png', 'jpg', 'jpeg', 'gif', 'webp'].contains(_extension);
 
   Future<void> _openExternally() async {
     if (isNetwork) {
-      debugPrint("External opening for network URLs is limited. Consider downloading first.");
+      debugPrint(
+          "External opening for network URLs is limited. Consider downloading first.");
     } else {
       final result = await OpenFilex.open(pathOrUrl);
       if (result.type != ResultType.done) {
@@ -61,14 +64,18 @@ class OmniFilePreviewer extends StatelessWidget {
       return isNetwork
           ? CachedNetworkImage(
               imageUrl: pathOrUrl,
-              placeholder: (context, url) => placeholderWidget ?? const Center(child: CircularProgressIndicator()),
-              errorWidget: (context, url, error) => errorWidget ?? const Icon(Icons.error),
+              placeholder: (context, url) =>
+                  placeholderWidget ??
+                  const Center(child: CircularProgressIndicator()),
+              errorWidget: (context, url, error) =>
+                  errorWidget ?? const Icon(Icons.error),
               fit: BoxFit.contain,
             )
           : Image.file(
               File(pathOrUrl),
               fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) => errorWidget ?? const Icon(Icons.error),
+              errorBuilder: (context, error, stackTrace) =>
+                  errorWidget ?? const Icon(Icons.error),
             );
     }
 
@@ -94,7 +101,9 @@ class OmniFilePreviewer extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: isNetwork ? null : _openExternally,
               icon: const Icon(Icons.open_in_new),
-              label: Text(isNetwork ? 'Download required to open' : 'Open in External App'),
+              label: Text(isNetwork
+                  ? 'Download required to open'
+                  : 'Open in External App'),
             ),
           ],
         ),

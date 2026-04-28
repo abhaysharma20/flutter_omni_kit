@@ -12,7 +12,8 @@ class OmniStorage {
 
   static void _checkInit() {
     if (_prefs == null) {
-      throw Exception("OmniStorage not initialized. Call 'await OmniStorage.init()' first.");
+      throw Exception(
+          "OmniStorage not initialized. Call 'await OmniStorage.init()' first.");
     }
   }
 
@@ -24,7 +25,7 @@ class OmniStorage {
     if (value is bool) return await _prefs!.setBool(key, value);
     if (value is double) return await _prefs!.setDouble(key, value);
     if (value is List<String>) return await _prefs!.setStringList(key, value);
-    
+
     // For maps or custom objects, encode to JSON
     return await _prefs!.setString(key, jsonEncode(value));
   }
@@ -42,7 +43,7 @@ class OmniStorage {
         return null;
       }
     }
-    
+
     return value as T;
   }
 

@@ -86,7 +86,8 @@ class OmniShimmer extends StatelessWidget {
   }
 
   /// A rectangular shimmer for images/banners
-  static Widget rectangular({double width = double.infinity, double height = 150}) {
+  static Widget rectangular(
+      {double width = double.infinity, double height = 150}) {
     return OmniShimmer(
       child: Container(
         width: width,

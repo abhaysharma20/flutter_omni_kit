@@ -30,7 +30,8 @@ class OmniNetwork {
   }
 
   /// Perform a GET request
-  Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) async {
+  Future<Response> get(String path,
+      {Map<String, dynamic>? queryParameters}) async {
     if (!await isConnected) {
       throw DioException(
         requestOptions: RequestOptions(path: path),
@@ -49,7 +50,8 @@ class OmniNetwork {
   }
 
   /// Perform a POST request
-  Future<Response> post(String path, {dynamic data, Map<String, dynamic>? queryParameters}) async {
+  Future<Response> post(String path,
+      {dynamic data, Map<String, dynamic>? queryParameters}) async {
     if (!await isConnected) {
       throw DioException(
         requestOptions: RequestOptions(path: path),
@@ -60,7 +62,8 @@ class OmniNetwork {
 
     try {
       Logger.i("POST Request: \${_dio.options.baseUrl}\$path");
-      return await _dio.post(path, data: data, queryParameters: queryParameters);
+      return await _dio.post(path,
+          data: data, queryParameters: queryParameters);
     } catch (e) {
       Logger.e("POST Error: \$e");
       rethrow;

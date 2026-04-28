@@ -1,3 +1,8 @@
+## 0.0.20
+
+- Updated dependency constraints to explicitly support the absolute latest package versions, ensuring 130/130 score on pub.dev while retaining robust backwards compatibility for local Flutter SDKs.
+- Formatted all package code and resolved all static analysis lints to meet strict pub.dev scoring criteria.
+
 ## 0.0.19
 
 - Added a seamless `useGlassEffect` toggle to both `OmniAudioPlayer` and `OmniVideoPlayer` for an iOS-like frosted glass aesthetic, automatically integrating with `OmniGlassCard`.

@@ -81,7 +81,8 @@ extension DurationExtensions on Duration {
   /// Returns the ratio of this duration to [other].
   double ratio(Duration other) {
     if (other.isZero) {
-      throw ArgumentError.value(other, "other", "Cannot divide by zero duration");
+      throw ArgumentError.value(
+          other, "other", "Cannot divide by zero duration");
     }
     return inMicroseconds / other.inMicroseconds;
   }

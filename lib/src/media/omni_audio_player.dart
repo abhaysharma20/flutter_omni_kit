@@ -7,7 +7,7 @@ import '../ui/omni_glass_card.dart';
 class OmniAudioPlayer extends StatefulWidget {
   final String url;
   final bool autoPlay;
-  
+
   /// Customization options
   final Color? backgroundColor;
   final Color? activeColor;
@@ -16,7 +16,7 @@ class OmniAudioPlayer extends StatefulWidget {
   final TextStyle? timeTextStyle;
   final EdgeInsetsGeometry padding;
   final BorderRadiusGeometry? borderRadius;
-  
+
   final bool useBackgroundValidation;
   final bool useGlassEffect;
 
@@ -58,8 +58,8 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
       if (mounted) {
         setState(() {
           _position = p;
-          // Poll duration on every position tick because some servers 
-          // (without Accept-Ranges) cause the native player to quietly update 
+          // Poll duration on every position tick because some servers
+          // (without Accept-Ranges) cause the native player to quietly update
           // the duration as it downloads, without firing a duration event.
           final currentDuration = _audioPlayer.duration;
           if (currentDuration != null && currentDuration > _duration) {
@@ -89,7 +89,8 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
     _initAudio();
   }
 
-  static Future<bool> _validateMediaInBackground(Map<String, dynamic> args) async {
+  static Future<bool> _validateMediaInBackground(
+      Map<String, dynamic> args) async {
     final url = args['url'] as String?;
     try {
       if (url != null) {
@@ -104,7 +105,9 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
   }
 
   static Future<bool> _runBackgroundValidation(String url) async {
-    if (url.startsWith('http')) return true; // just_audio handles network async safely
+    if (url.startsWith('http')) {
+      return true; // just_audio handles network async safely
+    }
     return await Isolate.run(() => _validateMediaInBackground({
           'url': url,
         }));
@@ -121,11 +124,12 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
 
     try {
       if (widget.url.startsWith('http')) {
-        await _audioPlayer.setAudioSource(LockCachingAudioSource(Uri.parse(widget.url)));
+        await _audioPlayer
+            .setAudioSource(LockCachingAudioSource(Uri.parse(widget.url)));
       } else {
         await _audioPlayer.setUrl(widget.url);
       }
-      
+
       if (widget.autoPlay) {
         _audioPlayer.play();
       }
@@ -212,68 +216,76 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Builder(
-                  builder: (context) {
-                    final double effectiveMax = _duration > _bufferedPosition 
-                        ? _duration.inSeconds.toDouble() 
-                        : (_bufferedPosition > _position ? _bufferedPosition.inSeconds.toDouble() : _position.inSeconds.toDouble());
-                    final double safeMax = effectiveMax > 0 ? effectiveMax : 1.0;
-                    
-                    // Display either the active drag value or the actual position
-                    final currentDisplaySeconds = _dragValue ?? _position.inSeconds.toDouble();
-                    final double safePosition = currentDisplaySeconds.clamp(0.0, safeMax);
+                Builder(builder: (context) {
+                  final double effectiveMax = _duration > _bufferedPosition
+                      ? _duration.inSeconds.toDouble()
+                      : (_bufferedPosition > _position
+                          ? _bufferedPosition.inSeconds.toDouble()
+                          : _position.inSeconds.toDouble());
+                  final double safeMax = effectiveMax > 0 ? effectiveMax : 1.0;
 
-                    return SliderTheme(
-                      data: SliderTheme.of(context).copyWith(
-                        trackHeight: 4.0,
-                        activeTrackColor: activeColor,
-                        inactiveTrackColor: inactiveColor,
-                        thumbColor: activeColor,
-                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6.0),
-                        overlayColor: activeColor.withAlpha(51),
-                      ),
-                      child: Slider(
-                        min: 0.0,
-                        max: safeMax,
-                        value: safePosition,
-                        onChangeStart: effectiveMax > 0
-                            ? (value) {
-                                setState(() {
-                                  _dragValue = value;
-                                });
-                              }
-                            : null,
-                        onChanged: effectiveMax > 0
-                            ? (value) {
-                                setState(() {
-                                  _dragValue = value;
-                                });
-                              }
-                            : null,
-                        onChangeEnd: effectiveMax > 0
-                            ? (value) {
-                                _audioPlayer.seek(Duration(seconds: value.toInt()));
-                                setState(() {
-                                  _dragValue = null;
-                                });
-                              }
-                            : null,
-                      ),
-                    );
-                  }
-                ),
+                  // Display either the active drag value or the actual position
+                  final currentDisplaySeconds =
+                      _dragValue ?? _position.inSeconds.toDouble();
+                  final double safePosition =
+                      currentDisplaySeconds.clamp(0.0, safeMax);
+
+                  return SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      trackHeight: 4.0,
+                      activeTrackColor: activeColor,
+                      inactiveTrackColor: inactiveColor,
+                      thumbColor: activeColor,
+                      thumbShape:
+                          const RoundSliderThumbShape(enabledThumbRadius: 6.0),
+                      overlayColor: activeColor.withAlpha(51),
+                    ),
+                    child: Slider(
+                      min: 0.0,
+                      max: safeMax,
+                      value: safePosition,
+                      onChangeStart: effectiveMax > 0
+                          ? (value) {
+                              setState(() {
+                                _dragValue = value;
+                              });
+                            }
+                          : null,
+                      onChanged: effectiveMax > 0
+                          ? (value) {
+                              setState(() {
+                                _dragValue = value;
+                              });
+                            }
+                          : null,
+                      onChangeEnd: effectiveMax > 0
+                          ? (value) {
+                              _audioPlayer
+                                  .seek(Duration(seconds: value.toInt()));
+                              setState(() {
+                                _dragValue = null;
+                              });
+                            }
+                          : null,
+                    ),
+                  );
+                }),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        _formatDuration(_dragValue != null ? Duration(seconds: _dragValue!.toInt()) : _position),
-                        style: widget.timeTextStyle ?? const TextStyle(fontSize: 12),
+                        _formatDuration(_dragValue != null
+                            ? Duration(seconds: _dragValue!.toInt())
+                            : _position),
+                        style: widget.timeTextStyle ??
+                            const TextStyle(fontSize: 12),
                       ),
                       Text(
                         _formatDuration(_duration),
-                        style: widget.timeTextStyle ?? const TextStyle(fontSize: 12),
+                        style: widget.timeTextStyle ??
+                            const TextStyle(fontSize: 12),
                       ),
                     ],
                   ),
@@ -287,7 +299,8 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
 
     if (widget.useGlassEffect) {
       return OmniGlassCard(
-        borderRadius: (widget.borderRadius as BorderRadius?) ?? BorderRadius.circular(12),
+        borderRadius:
+            (widget.borderRadius as BorderRadius?) ?? BorderRadius.circular(12),
         padding: EdgeInsets.zero,
         color: widget.backgroundColor ?? Colors.white,
         opacity: 0.15,

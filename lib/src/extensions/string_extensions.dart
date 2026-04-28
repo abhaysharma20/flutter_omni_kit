@@ -21,8 +21,8 @@ extension StringExtensions on String {
 
   /// Returns `true` if this string is a valid IPv4 address.
   bool get isIPv4 => RegExp(
-    r'^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$',
-  ).hasMatch(this);
+        r'^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$',
+      ).hasMatch(this);
 
   // ===========================================================================
   // Conversions & Parsing
@@ -126,9 +126,8 @@ extension StringExtensions on String {
     final words = trim().split(RegExp(r'\s+'));
     if (words.isEmpty) return this;
 
-    final chars = words
-        .map((w) => w.isNotEmpty ? w[0].toUpperCase() : '')
-        .join('');
+    final chars =
+        words.map((w) => w.isNotEmpty ? w[0].toUpperCase() : '').join('');
     if (chars.length <= maxChars) return chars;
     return chars.substring(0, maxChars);
   }
