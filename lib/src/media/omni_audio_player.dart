@@ -51,14 +51,27 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
     // Explicitly update position state on each tick
     _audioPlayer.positionStream.listen((p) {
       if (mounted) {
-        setState(() => _position = p);
+        setState(() {
+          _position = p;
+          // Poll duration on every position tick because some servers 
+          // (without Accept-Ranges) cause the native player to quietly update 
+          // the duration as it downloads, without firing a duration event.
+          final currentDuration = _audioPlayer.duration;
+          if (currentDuration != null && currentDuration > _duration) {
+            _duration = currentDuration;
+          }
+        });
       }
     });
 
     // Explicitly update duration state when it changes
     _audioPlayer.durationStream.listen((d) {
       if (mounted) {
-        setState(() => _duration = d ?? Duration.zero);
+        setState(() {
+          if (d != null && d > _duration) {
+            _duration = d;
+          }
+        });
       }
     });
 
@@ -187,29 +200,38 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                SliderTheme(
-                  data: SliderTheme.of(context).copyWith(
-                    trackHeight: 4.0,
-                    activeTrackColor: activeColor,
-                    inactiveTrackColor: inactiveColor,
-                    thumbColor: activeColor,
-                    thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6.0),
-                    overlayColor: activeColor.withAlpha(51),
-                  ),
-                  child: Slider(
-                    min: 0.0,
-                    max: _duration.inSeconds > 0 ? _duration.inSeconds.toDouble() : 1.0,
-                    value: _position.inSeconds.toDouble().clamp(0.0, _duration.inSeconds > 0 ? _duration.inSeconds.toDouble() : 1.0),
-                    onChanged: _duration.inSeconds > 0
-                        ? (value) {
-                            // Update local state immediately for smooth UI drag
-                            setState(() {
-                              _position = Duration(seconds: value.toInt());
-                            });
-                            _audioPlayer.seek(Duration(seconds: value.toInt()));
-                          }
-                        : null,
-                  ),
+                Builder(
+                  builder: (context) {
+                    final double effectiveMax = _duration > _position 
+                        ? _duration.inSeconds.toDouble() 
+                        : _position.inSeconds.toDouble();
+                    final double safeMax = effectiveMax > 0 ? effectiveMax : 1.0;
+                    final double safePosition = _position.inSeconds.toDouble().clamp(0.0, safeMax);
+
+                    return SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        trackHeight: 4.0,
+                        activeTrackColor: activeColor,
+                        inactiveTrackColor: inactiveColor,
+                        thumbColor: activeColor,
+                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6.0),
+                        overlayColor: activeColor.withAlpha(51),
+                      ),
+                      child: Slider(
+                        min: 0.0,
+                        max: safeMax,
+                        value: safePosition,
+                        onChanged: effectiveMax > 0
+                            ? (value) {
+                                setState(() {
+                                  _position = Duration(seconds: value.toInt());
+                                });
+                                _audioPlayer.seek(Duration(seconds: value.toInt()));
+                              }
+                            : null,
+                      ),
+                    );
+                  }
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),

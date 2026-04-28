@@ -1,3 +1,8 @@
+## 0.0.16
+
+- Added continuous internal polling for duration updates to correctly support servers that omit the `Accept-Ranges` or `Content-Length` headers.
+- Fixed a bug where missing duration metadata caused the seekbar thumb to be stuck at 100%.
+
 ## 0.0.15
 
 - Simplified audio player architecture by reverting to standard state variables (`_duration`, `_position`) for guaranteed UI refresh with each audio tick.
