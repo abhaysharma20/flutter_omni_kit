@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:isolate';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:rxdart/rxdart.dart';
 import '../ui/omni_glass_card.dart';
 
 class OmniAudioPlayer extends StatefulWidget {
@@ -43,51 +44,26 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
   late AudioPlayer _audioPlayer;
 
   bool _hasError = false;
-  Duration _duration = Duration.zero;
-  Duration _position = Duration.zero;
-  Duration _bufferedPosition = Duration.zero;
   double? _dragValue;
 
   @override
   void initState() {
     super.initState();
     _audioPlayer = AudioPlayer();
-
-    // Explicitly update position state on each tick
-    _audioPlayer.positionStream.listen((p) {
-      if (mounted) {
-        setState(() {
-          _position = p;
-          // Poll duration on every position tick because some servers
-          // (without Accept-Ranges) cause the native player to quietly update
-          // the duration as it downloads, without firing a duration event.
-          final currentDuration = _audioPlayer.duration;
-          if (currentDuration != null && currentDuration > _duration) {
-            _duration = currentDuration;
-          }
-        });
-      }
-    });
-
-    _audioPlayer.bufferedPositionStream.listen((b) {
-      if (mounted) {
-        setState(() => _bufferedPosition = b);
-      }
-    });
-
-    // Explicitly update duration state when it changes
-    _audioPlayer.durationStream.listen((d) {
-      if (mounted) {
-        setState(() {
-          if (d != null && d > _duration) {
-            _duration = d;
-          }
-        });
-      }
-    });
-
     _initAudio();
   }
+
+  Stream<PositionData> get _positionDataStream =>
+      Rx.combineLatest3<Duration, Duration, Duration?, PositionData>(
+        _audioPlayer.positionStream,
+        _audioPlayer.bufferedPositionStream,
+        _audioPlayer.durationStream,
+        (position, bufferedPosition, duration) => PositionData(
+          position,
+          bufferedPosition,
+          duration ?? Duration.zero,
+        ),
+      );
 
   static Future<bool> _validateMediaInBackground(
       Map<String, dynamic> args) async {
@@ -145,9 +121,7 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
 
       // Sync the state once more after waiting
       if (mounted) {
-        setState(() {
-          _duration = _audioPlayer.duration ?? Duration.zero;
-        });
+        setState(() {});
       }
 
       if (widget.autoPlay) {
@@ -233,84 +207,92 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Builder(builder: (context) {
-                  // Use the actual duration if available, otherwise fallback to buffered or current position
-                  final double durationSeconds = _duration.inSeconds.toDouble();
-                  final double positionSeconds = _position.inSeconds.toDouble();
-                  final double bufferedSeconds =
-                      _bufferedPosition.inSeconds.toDouble();
+            child: StreamBuilder<PositionData>(
+              stream: _positionDataStream,
+              builder: (context, snapshot) {
+                final positionData = snapshot.data ??
+                    PositionData(Duration.zero, Duration.zero, Duration.zero);
+                final duration = positionData.duration;
+                final position = positionData.position;
+                final bufferedPosition = positionData.bufferedPosition;
 
-                  // The max value is the duration, or the furthermost known point (buffered or current position)
-                  final double effectiveMax = durationSeconds > 0
-                      ? durationSeconds
-                      : (bufferedSeconds > positionSeconds
-                          ? bufferedSeconds
-                          : positionSeconds);
+                final double durationSeconds = duration.inSeconds.toDouble();
+                final double positionSeconds = position.inSeconds.toDouble();
+                final double bufferedSeconds =
+                    bufferedPosition.inSeconds.toDouble();
 
-                  final double safeMax = effectiveMax > 0 ? effectiveMax : 1.0;
+                // The max value is the duration, or the furthermost known point (buffered or current position)
+                final double effectiveMax = durationSeconds > 0
+                    ? durationSeconds
+                    : (bufferedSeconds > positionSeconds
+                        ? bufferedSeconds
+                        : positionSeconds);
 
-                  // Display either the active drag value or the actual position
-                  final currentDisplaySeconds = _dragValue ?? positionSeconds;
-                  final double safePosition =
-                      currentDisplaySeconds.clamp(0.0, safeMax);
+                final double safeMax = effectiveMax > 0 ? effectiveMax : 1.0;
 
-                  return SliderTheme(
-                    data: SliderTheme.of(context).copyWith(
-                      trackHeight: 4.0,
-                      activeTrackColor: activeColor,
-                      inactiveTrackColor: inactiveColor,
-                      thumbColor: activeColor,
-                      thumbShape:
-                          const RoundSliderThumbShape(enabledThumbRadius: 6.0),
-                      overlayColor: activeColor.withAlpha(51),
-                    ),
-                    child: Slider(
-                      min: 0.0,
-                      max: safeMax,
-                      value: safePosition,
-                      onChangeStart: (value) {
-                        setState(() {
-                          _dragValue = value;
-                        });
-                      },
-                      onChanged: (value) {
-                        setState(() {
-                          _dragValue = value;
-                        });
-                      },
-                      onChangeEnd: (value) {
-                        _audioPlayer.seek(Duration(seconds: value.toInt()));
-                        setState(() {
-                          _dragValue = null;
-                        });
-                      },
-                    ),
-                  );
-                }),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        _formatDuration(_dragValue != null
-                            ? Duration(seconds: _dragValue!.toInt())
-                            : _position),
-                        style: widget.timeTextStyle ??
-                            const TextStyle(fontSize: 12),
+                // Display either the active drag value or the actual position
+                final currentDisplaySeconds = _dragValue ?? positionSeconds;
+                final double safePosition =
+                    currentDisplaySeconds.clamp(0.0, safeMax);
+
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        trackHeight: 4.0,
+                        activeTrackColor: activeColor,
+                        inactiveTrackColor: inactiveColor,
+                        thumbColor: activeColor,
+                        thumbShape: const RoundSliderThumbShape(
+                            enabledThumbRadius: 6.0),
+                        overlayColor: activeColor.withAlpha(51),
                       ),
-                      Text(
-                        _formatDuration(_duration),
-                        style: widget.timeTextStyle ??
-                            const TextStyle(fontSize: 12),
+                      child: Slider(
+                        min: 0.0,
+                        max: safeMax,
+                        value: safePosition,
+                        onChangeStart: (value) {
+                          setState(() {
+                            _dragValue = value;
+                          });
+                        },
+                        onChanged: (value) {
+                          setState(() {
+                            _dragValue = value;
+                          });
+                        },
+                        onChangeEnd: (value) {
+                          _audioPlayer.seek(Duration(seconds: value.toInt()));
+                          setState(() {
+                            _dragValue = null;
+                          });
+                        },
                       ),
-                    ],
-                  ),
-                ),
-              ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            _formatDuration(_dragValue != null
+                                ? Duration(seconds: _dragValue!.toInt())
+                                : position),
+                            style: widget.timeTextStyle ??
+                                const TextStyle(fontSize: 12),
+                          ),
+                          Text(
+                            _formatDuration(duration),
+                            style: widget.timeTextStyle ??
+                                const TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ],
@@ -336,4 +318,12 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
       child: playerRow,
     );
   }
+}
+
+class PositionData {
+  final Duration position;
+  final Duration bufferedPosition;
+  final Duration duration;
+
+  PositionData(this.position, this.bufferedPosition, this.duration);
 }

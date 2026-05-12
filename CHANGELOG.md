@@ -1,3 +1,8 @@
+## 0.0.25
+
+- Refactored OmniAudioPlayer to use reactive StreamBuilder and RxDart for better performance.
+- Resolved potential setState performance issues during high-frequency audio updates.
+
 ## 0.0.24
 
 - Fixed disabled seek bar by ensuring it remains interactive and enabled even when duration metadata is slow to load.
