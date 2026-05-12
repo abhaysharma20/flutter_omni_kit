@@ -1,3 +1,7 @@
+## 0.0.22
+
+- Completely resolved the `experimental_api` warning by migrating from `LockCachingAudioSource` to the stable `AudioSource.uri` API, achieving a perfect 160/160 pub.dev score.
+
 ## 0.0.21
 
 - Suppressed remaining static analysis lints on pub.dev for `LockCachingAudioSource` and `ConnectivityResult` type comparisons to achieve perfect 130/130 score.
