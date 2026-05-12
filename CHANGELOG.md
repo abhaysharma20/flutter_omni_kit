@@ -1,3 +1,7 @@
+## 0.0.24
+
+- Fixed disabled seek bar by ensuring it remains interactive and enabled even when duration metadata is slow to load.
+
 ## 0.0.23
 
 - Enhanced `OmniAudioPlayer` to explicitly wait for audio metadata (duration) from the server before allowing playback, ensuring a fully functional seek bar from the start.
