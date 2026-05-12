@@ -45,6 +45,7 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
   bool _hasError = false;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
+  Duration _bufferedPosition = Duration.zero;
   double? _dragValue;
 
   @override
@@ -65,6 +66,12 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
             _duration = currentDuration;
           }
         });
+      }
+    });
+
+    _audioPlayer.bufferedPositionStream.listen((b) {
+      if (mounted) {
+        setState(() => _bufferedPosition = b);
       }
     });
 
@@ -231,12 +238,22 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
               children: [
                 Builder(builder: (context) {
                   // Use the actual duration if available, otherwise fallback to buffered or current position
-                  final double effectiveMax = _duration.inSeconds.toDouble();
+                  final double durationSeconds = _duration.inSeconds.toDouble();
+                  final double positionSeconds = _position.inSeconds.toDouble();
+                  final double bufferedSeconds =
+                      _bufferedPosition.inSeconds.toDouble();
+
+                  // The max value is the duration, or the furthermost known point (buffered or current position)
+                  final double effectiveMax = durationSeconds > 0
+                      ? durationSeconds
+                      : (bufferedSeconds > positionSeconds
+                          ? bufferedSeconds
+                          : positionSeconds);
+
                   final double safeMax = effectiveMax > 0 ? effectiveMax : 1.0;
 
                   // Display either the active drag value or the actual position
-                  final currentDisplaySeconds =
-                      _dragValue ?? _position.inSeconds.toDouble();
+                  final currentDisplaySeconds = _dragValue ?? positionSeconds;
                   final double safePosition =
                       currentDisplaySeconds.clamp(0.0, safeMax);
 
@@ -254,29 +271,22 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
                       min: 0.0,
                       max: safeMax,
                       value: safePosition,
-                      onChangeStart: effectiveMax > 0
-                          ? (value) {
-                              setState(() {
-                                _dragValue = value;
-                              });
-                            }
-                          : null,
-                      onChanged: effectiveMax > 0
-                          ? (value) {
-                              setState(() {
-                                _dragValue = value;
-                              });
-                            }
-                          : null,
-                      onChangeEnd: effectiveMax > 0
-                          ? (value) {
-                              _audioPlayer
-                                  .seek(Duration(seconds: value.toInt()));
-                              setState(() {
-                                _dragValue = null;
-                              });
-                            }
-                          : null,
+                      onChangeStart: (value) {
+                        setState(() {
+                          _dragValue = value;
+                        });
+                      },
+                      onChanged: (value) {
+                        setState(() {
+                          _dragValue = value;
+                        });
+                      },
+                      onChangeEnd: (value) {
+                        _audioPlayer.seek(Duration(seconds: value.toInt()));
+                        setState(() {
+                          _dragValue = null;
+                        });
+                      },
                     ),
                   );
                 }),
