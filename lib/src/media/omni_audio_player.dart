@@ -45,7 +45,6 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
   bool _hasError = false;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
-  Duration _bufferedPosition = Duration.zero;
   double? _dragValue;
 
   @override
@@ -66,12 +65,6 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
             _duration = currentDuration;
           }
         });
-      }
-    });
-
-    _audioPlayer.bufferedPositionStream.listen((b) {
-      if (mounted) {
-        setState(() => _bufferedPosition = b);
       }
     });
 
@@ -128,6 +121,26 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
             .setAudioSource(AudioSource.uri(Uri.parse(widget.url)));
       } else {
         await _audioPlayer.setUrl(widget.url);
+      }
+
+      // Wait for the duration to be available before proceeding (up to 10 seconds)
+      // This ensures the seek bar is populated and interaction is stable.
+      if (_audioPlayer.duration == null ||
+          _audioPlayer.duration == Duration.zero) {
+        try {
+          await _audioPlayer.durationStream
+              .firstWhere((d) => d != null && d > Duration.zero)
+              .timeout(const Duration(seconds: 10));
+        } catch (_) {
+          // Fallback if duration is never provided (e.g. some live streams)
+        }
+      }
+
+      // Sync the state once more after waiting
+      if (mounted) {
+        setState(() {
+          _duration = _audioPlayer.duration ?? Duration.zero;
+        });
       }
 
       if (widget.autoPlay) {
@@ -217,11 +230,8 @@ class _OmniAudioPlayerState extends State<OmniAudioPlayer> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Builder(builder: (context) {
-                  final double effectiveMax = _duration > _bufferedPosition
-                      ? _duration.inSeconds.toDouble()
-                      : (_bufferedPosition > _position
-                          ? _bufferedPosition.inSeconds.toDouble()
-                          : _position.inSeconds.toDouble());
+                  // Use the actual duration if available, otherwise fallback to buffered or current position
+                  final double effectiveMax = _duration.inSeconds.toDouble();
                   final double safeMax = effectiveMax > 0 ? effectiveMax : 1.0;
 
                   // Display either the active drag value or the actual position

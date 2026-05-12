@@ -1,3 +1,8 @@
+## 0.0.23
+
+- Enhanced `OmniAudioPlayer` to explicitly wait for audio metadata (duration) from the server before allowing playback, ensuring a fully functional seek bar from the start.
+- Optimized seek bar synchronization by removing redundant buffering listeners and ensuring stable duration state.
+
 ## 0.0.22
 
 - Completely resolved the `experimental_api` warning by migrating from `LockCachingAudioSource` to the stable `AudioSource.uri` API, achieving a perfect 160/160 pub.dev score.
