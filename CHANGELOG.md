@@ -1,4 +1,9 @@
+## 0.0.26
+
+- Added homepage URL (https://abhaysharma20.github.io) to package metadata for pub.dev publisher profile.
+
 ## 0.0.25
+
 
 - Refactored OmniAudioPlayer to use reactive StreamBuilder and RxDart for better performance.
 - Resolved potential setState performance issues during high-frequency audio updates.
