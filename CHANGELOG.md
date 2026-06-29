@@ -1,4 +1,9 @@
+## 1.0.1
+
+- First stable release. Bumped to semantic versioning 1.0.x.
+
 ## 0.0.26
+
 
 - Added homepage URL (https://abhaysharma20.github.io) to package metadata for pub.dev publisher profile.
 
