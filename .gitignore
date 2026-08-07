@@ -12,3 +12,8 @@ build/
 # OS temporary files
 .DS_Store
 
+# Flutter files
+.flutter-plugins
+.flutter-plugins-dependencies
+
+
