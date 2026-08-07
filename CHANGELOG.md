@@ -1,3 +1,7 @@
+## 1.0.4
+
+- Excluded the `build/` directory and temporary files from the package archive, resolving the pub.dev stuck "Pending Analysis" issue.
+
 ## 1.0.3
 
 - Updated `DOCUMENTATION.md` to include full documentation for all media widgets, UI components, and infrastructure utilities.
