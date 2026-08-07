@@ -1,3 +1,7 @@
+## 1.0.2
+
+- Updated and verified package dependencies (`connectivity_plus`, `dio`, `just_audio`, `rxdart`, `uuid`) to their latest safe versions.
+
 ## 1.0.1
 
 - First stable release. Bumped to semantic versioning 1.0.x.
