@@ -74,5 +74,64 @@ Kotlin-inspired scoping functions.
 *   **`Debouncer`**: A class to debounce rapid sequential actions. Example: `final db = Debouncer(delay: 500.milliseconds); db.run(() => print('Hello'));`
 *   **`Logger`**: A stylized console logger for debugging (`Logger.i()`, `Logger.e()`, `Logger.w()`, `Logger.d()`).
 
+## 8. Media Widgets
+
+### `OmniAudioPlayer`
+A smooth, feature-rich audio player built on top of `just_audio` and `rxdart`. It handles background isolate validation of streams and features a fluid, responsive seekbar design.
+* **Properties**:
+  * `url`: Direct link to audio stream/file.
+  * `autoPlay`: Automatically start playback.
+  * `backgroundColor`, `activeColor`, `inactiveColor`: Custom colors for UI controls.
+  * `useGlassEffect`: Frosted-glass design overlay toggle.
+  * `useBackgroundValidation`: Validates path or URL in a separate isolate.
+
+### `OmniVideoPlayer`
+An elegant video player powered by `video_player` and `chewie`. It supports isolated validation of stream links before loading to avoid locking the UI thread.
+* **Properties**:
+  * `url` / `file`: Stream URL or local video file.
+  * `autoPlay` / `looping`: Basic play configurations.
+  * `useBackgroundValidation`: Performs connection status/file checks in the background.
+  * `useGlassEffect`: Frosted glass decoration backdrop toggle.
+
+### `OmniFilePreviewer`
+A versatile universal file viewer widget that dynamically loads PDF documents (using Syncfusion PDF Viewer), image assets (utilizing cached network images), or falls back to an external system opener for office formats (Docx, Xlsx, Pptx).
+* **Properties**:
+  * `pathOrUrl`: Location of file to preview.
+  * `isNetwork`: Specify if file is network or local asset.
+  * `placeholderWidget` / `errorWidget`: Fallbacks during loading states.
+
+## 9. UI Components
+
+### `OmniGlassCard`
+A premium Glassmorphism container providing frosted-glass effect with customizable blur, opacity, border, and background highlights.
+* **Properties**:
+  * `blur`: Strength of backdrop filter blur (defaults to `10.0`).
+  * `opacity`: Fill opacity of glass card (defaults to `0.1`).
+  * `color`: Underlay color configuration.
+
+### `OmniShimmer`
+A loading skeleton layout manager powered by `shimmer` package.
+* **Static Builders**:
+  * `OmniShimmer.listTile({int count})`: Shows a loading template for list cells.
+  * `OmniShimmer.circular({double size})`: Circular skeleton for avatar loading.
+  * `OmniShimmer.rectangular({double width, double height})`: Rectangular banner loading skeleton.
+
+## 10. Infrastructure Utilities
+
+### `OmniNetwork`
+A wrapper around the `dio` network client package. Features automatic active network connection checks (using `connectivity_plus`) before launching HTTP requests to avoid socket crashes.
+* **Methods**:
+  * `init()`: Initialize base parameters (headers, connection/receive timeout, base URL).
+  * `get(String path)`: Secure GET request with connectivity validation.
+  * `post(String path, {dynamic data})`: Secure POST request with connectivity validation.
+
+### `OmniStorage`
+A clean "one-liner" local storage solution using `shared_preferences` that handles JSON encoding/decoding of custom models and primitives dynamically.
+* **Methods**:
+  * `init()`: Inits local shared preferences instance.
+  * `write(String key, dynamic value)`: Saves values (primitives or serializable objects).
+  * `read<T>(String key)`: Retrieves value casted to target type.
+  * `remove(String key)` / `clear()`: Clean state management.
+
 ---
 *For a quick start guide, please refer to the `README.md`.*

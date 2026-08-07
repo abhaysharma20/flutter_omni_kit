@@ -1,3 +1,7 @@
+## 1.0.3
+
+- Updated `DOCUMENTATION.md` to include full documentation for all media widgets, UI components, and infrastructure utilities.
+
 ## 1.0.2
 
 - Updated and verified package dependencies (`connectivity_plus`, `dio`, `just_audio`, `rxdart`, `uuid`) to their latest safe versions.
